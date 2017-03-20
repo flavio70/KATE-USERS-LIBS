@@ -31,7 +31,9 @@ Edit your home/userxx/.pythonrc file adding the following lines
 
         export PYTHONPATH=${PYTHONPATH}:~/GITREPOS/KATE-USERS-LIBS
 
-
+reload your .bashrc file
+    
+        source ~/.bashrc
 
 
 Usage
@@ -41,8 +43,3 @@ Just import into your testcase files the desired libraries in the form:
 
 
  _from kateUsrLib.**userxx** import **libraryname**_
-    
-
-
-
-
