@@ -10,7 +10,7 @@ Installation
 
     _suppose your home directory is something like **/home/userxx**_
     
-    >mkdir /home/userxx/GIREPOS
+    >mkdir /home/userxx/GITREPOS
     
     >cd /home/userxx/GITREPOS
     
@@ -20,7 +20,7 @@ Installation
 
 2. #### Get the main code
 
-    >git clone git@151.98.52.73:4554:automation/KATE-USERS-LIBS.git
+    >git clone git@151.98.52.73:automation/KATE-USERS-LIBS.git
 
 
 
@@ -42,4 +42,4 @@ Usage
 Just import into your testcase files the desired libraries in the form:
 
 
- _from kateUsrLib.**userxx** import **libraryname**_
+ _from kateUsrLibs.**userxx** import **libraryname**_
