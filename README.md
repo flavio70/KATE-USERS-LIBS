@@ -20,7 +20,7 @@ Installation
 
 2. #### Get the main code
 
-    >git clone git@151.98.52.73:automation/KATE-USERS-LIBS.git
+    >git clone git@151.98.52.73:Automation/KATE-USERS-LIBS.git
 
 
 
