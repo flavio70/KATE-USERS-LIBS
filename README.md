@@ -42,4 +42,4 @@ Usage
 Just import into your testcase files the desired libraries in the form:
 
 
- _from kateUsrLibs.**userxx** import **libraryname**_
+ _from kateUsrLibs.**userxx**.**libraryname** import *_
