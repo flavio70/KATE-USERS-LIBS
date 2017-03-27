@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+'''
+.. module::testcase
+   :platform: Unix
+   :synopsis:This module is used for TDM test case implementation.Provides common functions
+
+.. moduleauthor:: Antonio Selvaggi <antonio.selvaggi.ext@nokia.com>
+ 
+'''   
+
 from katelibs.testcase          import TestCase
 from katelibs.eqpt1850tss320    import Eqpt1850TSS320
 from katelibs.instrumentONT     import InstrumentONT
@@ -7,6 +17,13 @@ import time
 from inspect import currentframe
 
 def PrintLineFunction(gap=0):
+
+    """ Returns a line number in running file .
+    :param gap: if equal to 0 identifies current line, else a prevoius or a following line  
+     >>> PrintLine()
+
+    """
+
     cf = currentframe()
     line = cf.f_back.f_lineno + gap
     code = str(cf.f_back.f_code)
@@ -20,15 +37,20 @@ def PrintLineFunction(gap=0):
 
 
 def dprint(str,level):
-    '''
-    # print debug level:  0=no print
-    #                     1=TL1 message response
-    #                     2=OK/KO info 
-    #                     4=execution info
-    # can be used in combination, i.e.
-    #                     3=TL1 message response+OK/KO info
-    # 
-    '''
+    
+    """ Print on Eclipse output
+    :param str: string printed on output
+    :param level: debug level:  0=no print
+                                1=TL1 message response
+                                2=OK/KO info 
+                                4=execution info
+                                can be used in combination, i.e.
+                                3=TL1 message response+OK/KO info
+     
+    >>> dprint("KO\t At least a matrix is not in service",2)
+            
+    """
+    
     E_DPRINT = 7    
     
     if (E_DPRINT & level):
@@ -37,6 +59,17 @@ def dprint(str,level):
 
 
 def CheckPrimaryState(run, NE, msg, aid, state,line):
+
+    """ Verifies if an entity's (card, module, facility) primary state is correct
+    :param run: running instance of class Test
+    :param NE:  an equipment variable
+    :param msg: the response to the TL1 message retrieve 
+    :param aid: the entity's AID
+    :param state: the expected primary state
+    :param line: the line of file corresponding to function call
+     >>> CheckPrimaryState(self, NE1, msg, aidList[i], "IS-NR",PrintLineFunction())
+            
+    """
 
     found=False
     
@@ -69,6 +102,21 @@ def CheckPrimaryState(run, NE, msg, aid, state,line):
     return found
 
 def CheckSecondaryState(run, NE, msg, aid, state, line, positive=True, write=True):
+
+    """ Verifies if a state is or is not present between the secondary states of entity's (card, module, facility)
+    :param run: running instance of class Test
+    :param NE:  an equipment variable
+    :param msg: the response to the TL1 message retrieve
+    :param aid: the entity's AID
+    :param state: the expected secondary state
+    :param line: the line of file corresponding to function call
+    :param positive: if is equal to True the function is successful if expected state is found, 
+                     if it is equal to False the function is successful if expected state is not found,  
+    :param write: if is equal to True the function reports is successful if expected state is found, 
+                     if it is equal to False the function is successful if expected state is not found,  
+     >>> CheckPrimaryState(self, NE1, msg, aidList[i], "IS-NR",PrintLineFunction())
+            
+    """
 
     found=False
     
@@ -217,7 +265,7 @@ def CheckEvent (run, NE, marker, line, aid=None, cmd=None, positive=True):
                 if (cmd==None):
                    cmd="" 
                 dprint("KO\tEvent %s reported on aid %s %s\n"%(cmd,aid, line),2)
-                run.add_failure(NE, "TL1 report check","0.0","KO TL1 event\n","KO\tNO Event %s reported on aid %s %s\n"%(cmd,aid,line))    
+                run.add_failure(NE, "TL1 report check","0.0","KO TL1 event\n","KO\t Event %s reported on aid %s %s\n"%(cmd,aid,line))    
     return
 
 def CheckCondition (run, NE, msg, condition_exp, aid, line):
