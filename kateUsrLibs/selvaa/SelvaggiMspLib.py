@@ -300,7 +300,7 @@ def CheckCondition (run, NE, msg, condition_exp, aid, line):
                 dprint("KO\t Condition/Alarm found on aid %s\n"%aid,2)
                 run.add_failure(NE, "TL1 Condition/Alarm check","0.0","Condition/Alarm found on aid %s %s\n"%(aid,line),"Condition/Alarm wrongly found")
             else:                   #ALARM EXPECTED AND SAME ALARM FOUND  
-                dprint("0K\t Condition/Alarm %s found on aid %s\n"%(condition_exp,aid),2)
+                dprint("OK\t Condition/Alarm %s found on aid %s\n"%(condition_exp,aid),2)
                 run.add_success(NE, "TL1 Condition/Alarm check","0.0","Condition/Alarm %s found on aid %s %s\n"%(condition_exp,aid,line))
                 
     return
