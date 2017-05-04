@@ -120,9 +120,13 @@ def select_from(rate, au_type, ne_s1):
 
 
 def select_to(rate, au_type, ne_s2, n_conn, conc_factor):
+
     conn_to = []
-    for i in range(1, (n_conn + 1)):
-        conn_to = conn_to + [rate + au_type + "-" + ne_s2 + "-" + str(i + conc_factor)]
+    for i in range(0, n_conn):
+        if(conc_factor == 0):  
+            conn_to = conn_to + [rate + au_type + "-" + ne_s2 + "-" + str(i+1)]
+        else:
+            conn_to = conn_to + [rate + au_type + "-" + ne_s2 + "-" + str(1 + (conc_factor*i))]
         
     return(conn_to)
 
@@ -728,23 +732,38 @@ def setup_vc_conc(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_
     
     if((rate == "STM4") and (vc_type == "VC44C")):
         hostruct_s1 = "1xAU44C;"
-        hostruct_s2 = "1xAU44C-60xAU4;"
+        if(n_conn == 1):
+            hostruct_s2 = "1xAU44C-60xAU4;"
+        else:
+            hostruct_s2 = "16xAU44C"
         conc_factor = 4
     elif((rate == "STM16") and (vc_type == "VC44C")):
         hostruct_s1 = "1xAU44C-12xAU4;"
-        hostruct_s2 = "1xAU44C-60xAU4;"
+        if(n_conn == 1):
+            hostruct_s2 = "1xAU44C-60xAU4;"
+        else:
+            hostruct_s2 = "16xAU44C"
         conc_factor = 4
     elif((rate == "STM16") and (vc_type == "VC416C")):
         hostruct_s1 = "1xAU416C;"
-        hostruct_s2 = "1xAU416C-48xAU4;"
+        if(n_conn == 1):
+            hostruct_s2 = "1xAU44C-60xAU4;"
+        else:
+            hostruct_s2 = "4xAU416C"
         conc_factor = 16
     elif((rate == "STM64") and (vc_type == "VC44C")):
         hostruct_s1 = "1xAU44C-60xAU4;"
-        hostruct_s2 = "1xAU44C-60xAU4;"
+        if(n_conn == 1):
+            hostruct_s2 = "1xAU44C-60xAU4;"
+        else:
+            hostruct_s2 = "16xAU44C"
         conc_factor = 4
     elif((rate == "STM64") and (vc_type == "VC416C")):
         hostruct_s1 = "1xAU416C-48xAU4;"
-        hostruct_s2 = "1xAU416C-48xAU4;"
+        if(n_conn == 1):
+            hostruct_s2 = "1xAU44C-60xAU4;"
+        else:
+            hostruct_s2 = "4xAU416C"
         conc_factor = 16
     else:
         hostruct_s1= "1xAU464C;"
@@ -916,7 +935,11 @@ def verify_conn_br_tps536x(self, NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_typ
             test_result = test_conn_br(self, NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 64, 0)
         
     elif(rate == "STM16"):
-        if((vc_type == "VC44C") or (vc_type == "VC416C")):
+        if(vc_type == "VC44C"):
+            conc_factor = setup_vc_conc(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 16)
+            test_result = test_conn_br(self, NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 16, conc_factor)
+            default_vc_type(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2)
+        elif(vc_type == "VC416C"):
             conc_factor = setup_vc_conc(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 4)
             test_result = test_conn_br(self, NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 4, conc_factor)
             default_vc_type(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2)
@@ -924,7 +947,15 @@ def verify_conn_br_tps536x(self, NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_typ
             test_result = test_conn_br(self, NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 64, 0)
         
     elif(rate == "STM64"):
-        if((vc_type == "VC44C") or (vc_type == "VC416C") or (vc_type == "VC464C")):
+        if(vc_type == "VC44C"):
+            conc_factor = setup_vc_conc(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 16)
+            test_result = test_conn_br(self, NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 16, conc_factor)
+            default_vc_type(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2)
+        elif(vc_type == "VC416C"):
+            conc_factor = setup_vc_conc(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 4)
+            test_result = test_conn_br(self, NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 16, conc_factor)
+            default_vc_type(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2)
+        elif(vc_type == "VC464C"):
             conc_factor = setup_vc_conc(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 1)
             test_result = test_conn_br(self, NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2, 1, conc_factor)
             default_vc_type(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_s1, ne_s2)
