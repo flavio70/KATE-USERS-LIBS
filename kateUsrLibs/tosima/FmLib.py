@@ -73,6 +73,10 @@ global E_10XANY_STM16_MOD_NUM
 global E_24XANYMR_STMx_MOD_NUM 
 global E_10XANY10G_MOD_NUM
 
+global E_AU44C_STM16_IDX
+global E_AU44C_STM64_IDX
+global E_AU416C_STM64_IDX
+
 E_MAX_MVC4 = 384
 E_LO_MTX = "MXH60GLO"
 E_TIMEOUT = 20
@@ -162,6 +166,10 @@ E_10XANY_STMx_MOD_NUM = 10
 E_24XANYMR = "24XANYMR"
 E_24XANYMR_STMx_MOD = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
 E_24XANYMR_STMx_MOD_NUM = 24
+
+E_AU44C_STM16_IDX = [1,5,9,13]
+E_AU44C_STM64_IDX = [1,5,9,13,17,21,25,29,33,37,41,45,49,53,57,61]
+E_AU416C_STM64_IDX = [1,17,33,49]
 
 
 def dprint(zq_str,zq_level):
@@ -441,7 +449,13 @@ def QS_070_Check_No_Alarm(zq_run, NE1, ONT, zq_ONT_p1, zq_ONT_p2, zq_vc4_ch1, zq
     ONT.get_set_tx_lo_measure_channel(zq_ONT_p1, zq_vc4_ch1)
     ONT.get_set_tx_lo_measure_channel(zq_ONT_p2, zq_vc4_ch2)
     
+    ONT.start_measurement(zq_ONT_p1)
+    ONT.start_measurement(zq_ONT_p2)
+    
     time.sleep(1)
+
+    ONT.halt_measurement(zq_ONT_p1)
+    ONT.halt_measurement(zq_ONT_p2)
 
     zq_res = False
     zq_alm1=ONT.retrieve_ho_lo_alarms(zq_ONT_p1)
@@ -1983,3 +1997,165 @@ def QS_920_Get_Date_Time(NE1):
 
     return(zq_date_time)
 
+
+def QS_1000_Check_AU4_SST(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_status, zq_flag=True, zq_conc=""):
+    
+    zq_tl1_res=NE1.tl1.do("RTRV-AU4{}::{}AU4{}-{}-{};".format(zq_conc, zq_rate, zq_conc, zq_slot, zq_au4_num))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    if zq_cmd == (True,'COMPLD'):
+        zq_sst=zq_msg.get_cmd_sst("{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_num))
+        if (not zq_flag):
+            if (zq_status not in str(zq_sst)):
+                dprint("OK\t Initial SST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_sst),2)
+                zq_run.add_success(NE1, 
+                                 "SST VERIFY",
+                                 "0.0", 
+                                 "Initial SST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_sst))
+            else:
+                dprint("KO\t Initial SST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_sst),2)
+                zq_run.add_failure(NE1,
+                                 "SST VERIFY",
+                                 "0.0",
+                                 "SST Verify Error",
+                                 "Initial SST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_sst)+QS_000_Print_Line_Function())
+        else:
+            if (zq_status in str(zq_sst)):
+                dprint("OK\t Initial SST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_sst),2)
+                zq_run.add_success(NE1, 
+                                 "SST VERIFY",
+                                 "0.0", 
+                                 "Initial SST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_sst))
+            else:
+                dprint("KO\t Initial SST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_sst),2)
+                zq_run.add_failure(NE1,
+                                 "SST VERIFY",
+                                 "0.0",
+                                 "SST Verify Error",
+                                 "Initial SST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_sst)+QS_000_Print_Line_Function())
+            
+    else:
+        dprint("KO\t [RTRV-AU4::{}AU4{}-{}-1]".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_sst),2)
+        zq_run.add_failure(NE1,
+                         "EQUIPMENT RETRIEVAL",
+                         "0.0",
+                         "Equipment Retrieval Error",
+                         "[RTRV-AU4::{}AU4{}-{}-1]".format(zq_rate, zq_conc, zq_slot, zq_au4_num)+QS_000_Print_Line_Function())
+
+    return
+    
+    
+def QS_1050_Check_AU4_PST(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_status, zq_flag=True, zq_conc=""):
+    
+    zq_tl1_res=NE1.tl1.do("RTRV-AU4{}::{}AU4{}-{}-{};".format(zq_conc, zq_rate, zq_conc, zq_slot, zq_au4_num))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    if zq_cmd == (True,'COMPLD'):
+        zq_pst=zq_msg.get_cmd_pst("{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_num))
+        if (not zq_flag):
+            if (zq_status not in str(zq_pst)):
+                dprint("OK\t Initial PST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst),2)
+                zq_run.add_success(NE1, 
+                                 "PST VERIFY",
+                                 "0.0", 
+                                 "Initial PST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst))
+            else:
+                dprint("KO\t Initial PST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst),2)
+                zq_run.add_failure(NE1,
+                                 "PST VERIFY",
+                                 "0.0",
+                                 "PST Verify Error",
+                                 "Initial PST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst)+QS_000_Print_Line_Function())
+        else:
+            if (zq_status in str(zq_pst)):
+                dprint("OK\t Initial PST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst),2)
+                zq_run.add_success(NE1, 
+                                 "PST VERIFY",
+                                 "0.0", 
+                                 "Initial PST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst))
+            else:
+                dprint("KO\t Initial PST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst),2)
+                zq_run.add_failure(NE1,
+                                 "PST VERIFY",
+                                 "0.0",
+                                 "PST Verify Error",
+                                 "Initial PST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst)+QS_000_Print_Line_Function())
+            
+    else:
+        dprint("KO\t [RTRV-AU4::{}AU4{}-{}-1]".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst),2)
+        zq_run.add_failure(NE1,
+                         "EQUIPMENT RETRIEVAL",
+                         "0.0",
+                         "Equipment Retrieval Error",
+                         "[RTRV-AU4::{}AU4{}-{}-1]".format(zq_rate, zq_conc, zq_slot, zq_au4_num)+QS_000_Print_Line_Function())
+
+    return
+    
+        
+def QS_1100_Create_AU4_XC(zq_run, NE1, zq_rate, zq_slot, zq_au4_1, zq_au4_2, zq_cct="2WAY", zq_conc=""):
+
+    zq_from = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_1)
+    zq_to = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_2)
+    zq_tl1_res=NE1.tl1.do("ENT-CRS-VC4{}::{},{}:::{};".format(zq_conc, zq_from, zq_to, zq_cct))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    if zq_cmd == (True,'COMPLD'):
+        dprint("OK\t [{}] Cross-connection from {} to {} creation successful".format(zq_cct, zq_from, zq_to),2)
+        zq_run.add_success(NE1, 
+                         "CROSS-CONNECTION CREATION",
+                         "0.0", 
+                         "[{}] Cross-connection from {} to {} creation successful".format(zq_cct, zq_from, zq_to))
+    else:
+        dprint("KO\t {} Cross-connection from {} to {} creation failed".format(zq_cct, zq_from, zq_to),2)
+        zq_run.add_failure(NE1,
+                         "CROSS-CONNECTION CREATION",
+                         "0.0",
+                         "Cross-Connection Creation Error",
+                         "[{}] Cross-connection from {} to {} creation failed".format(zq_cct, zq_from, zq_to)+QS_000_Print_Line_Function())
+
+    
+    return
+
+
+def QS_1200_Delete_AU4_XC(zq_run, NE1, zq_rate, zq_slot, zq_au4_1, zq_au4_2, zq_cct="2WAY", zq_conc=""):
+
+    zq_from = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_1)
+    zq_to = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_2)
+    zq_tl1_res=NE1.tl1.do("DLT-CRS-VC4{}::{},{}:::{};".format(zq_conc, zq_from, zq_to, zq_cct))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    if zq_cmd == (True,'COMPLD'):
+        dprint("OK\t [{}] Cross-connection from {} to {} deletion successful".format(zq_cct, zq_from, zq_to),2)
+        zq_run.add_success(NE1, 
+                         "CROSS-CONNECTION DELETION",
+                         "0.0", 
+                         "[{}] Cross-connection from {} to {} deletion successful".format(zq_cct, zq_from, zq_to))
+    else:
+        dprint("KO\t [{}] Cross-connection from {} to {} deletion failed".format(zq_cct, zq_from, zq_to),2)
+        zq_run.add_failure(NE1,
+                         "CROSS-CONNECTION DELETION",
+                         "0.0",
+                         "Cross-Connection Deletion Error",
+                         "[{}] Cross-connection from {} to {} deletion failed".format(zq_cct, zq_from, zq_to)+QS_000_Print_Line_Function())
+    return
+
+def QS_1300_Change_STMn_Structure(zq_run, NE1, zq_rate, zq_slot, zq_struct):
+    
+    zq_tl1_res=NE1.tl1.do("ED-{}::{}-{}::::HOSTRUCT={};".format(zq_rate, zq_rate, zq_slot, zq_struct))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    if zq_cmd == (True,'COMPLD'):
+        dprint("OK\t {}-{} structure change to {} successful".format(zq_rate, zq_slot, zq_struct),2)
+        zq_run.add_success(NE1, 
+                         "HO STRUCTURE MODIFY",
+                         "0.0", 
+                         "{}-{} structured to {}".format(zq_rate, zq_slot, zq_struct))
+    else:
+        dprint("KO\t {}-{} structure change to {} failed".format(zq_rate, zq_slot, zq_struct),2)
+        zq_run.add_failure(NE1,
+                         "HO STRUCTURE MODIFY",
+                         "0.0",
+                         "HO Structure Modify Error",
+                         "{}-{} structure change to {} failed".format(zq_rate, zq_slot, zq_struct)+QS_000_Print_Line_Function())
+    
+    return
