@@ -449,7 +449,13 @@ def QS_070_Check_No_Alarm(zq_run, NE1, ONT, zq_ONT_p1, zq_ONT_p2, zq_vc4_ch1, zq
     ONT.get_set_tx_lo_measure_channel(zq_ONT_p1, zq_vc4_ch1)
     ONT.get_set_tx_lo_measure_channel(zq_ONT_p2, zq_vc4_ch2)
     
+    ONT.start_measurement(zq_ONT_p1)
+    ONT.start_measurement(zq_ONT_p2)
+    
     time.sleep(1)
+
+    ONT.halt_measurement(zq_ONT_p1)
+    ONT.halt_measurement(zq_ONT_p2)
 
     zq_res = False
     zq_alm1=ONT.retrieve_ho_lo_alarms(zq_ONT_p1)
@@ -2030,6 +2036,53 @@ def QS_1000_Check_AU4_SST(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_status, 
             
     else:
         dprint("KO\t [RTRV-AU4::{}AU4{}-{}-1]".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_sst),2)
+        zq_run.add_failure(NE1,
+                         "EQUIPMENT RETRIEVAL",
+                         "0.0",
+                         "Equipment Retrieval Error",
+                         "[RTRV-AU4::{}AU4{}-{}-1]".format(zq_rate, zq_conc, zq_slot, zq_au4_num)+QS_000_Print_Line_Function())
+
+    return
+    
+    
+def QS_1050_Check_AU4_PST(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_status, zq_flag=True, zq_conc=""):
+    
+    zq_tl1_res=NE1.tl1.do("RTRV-AU4{}::{}AU4{}-{}-{};".format(zq_conc, zq_rate, zq_conc, zq_slot, zq_au4_num))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    if zq_cmd == (True,'COMPLD'):
+        zq_pst=zq_msg.get_cmd_pst("{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_num))
+        if (not zq_flag):
+            if (zq_status not in str(zq_pst)):
+                dprint("OK\t Initial PST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst),2)
+                zq_run.add_success(NE1, 
+                                 "PST VERIFY",
+                                 "0.0", 
+                                 "Initial PST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst))
+            else:
+                dprint("KO\t Initial PST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst),2)
+                zq_run.add_failure(NE1,
+                                 "PST VERIFY",
+                                 "0.0",
+                                 "PST Verify Error",
+                                 "Initial PST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst)+QS_000_Print_Line_Function())
+        else:
+            if (zq_status in str(zq_pst)):
+                dprint("OK\t Initial PST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst),2)
+                zq_run.add_success(NE1, 
+                                 "PST VERIFY",
+                                 "0.0", 
+                                 "Initial PST is correct [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst))
+            else:
+                dprint("KO\t Initial PST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst),2)
+                zq_run.add_failure(NE1,
+                                 "PST VERIFY",
+                                 "0.0",
+                                 "PST Verify Error",
+                                 "Initial PST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst)+QS_000_Print_Line_Function())
+            
+    else:
+        dprint("KO\t [RTRV-AU4::{}AU4{}-{}-1]".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst),2)
         zq_run.add_failure(NE1,
                          "EQUIPMENT RETRIEVAL",
                          "0.0",
