@@ -709,27 +709,7 @@ def setup_vc_conc(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_
     callResult = True
     conc_factor = 0
     chan_map = vc_type[0:3] + "_" + vc_type[3:]
-    
-    callResult = ONT1.get_set_rx_channel_mapping_size(ONT1_P1, chan_map)
-    print("ONT5xx.get_set_rx_channel_mapping_size ONT1 result: [{}]".format(callResult))
-    if(callResult == False):
-        return(callResult)
-
-    callResult = ONT2.get_set_rx_channel_mapping_size(ONT2_P1, chan_map)
-    print("ONT5xx.get_set_rx_channel_mapping_size ONT2 result: [{}]".format(callResult))
-    if(callResult == False):
-        return(callResult)
-
-    callResult = ONT1.get_set_tx_channel_mapping_size(ONT1_P1, chan_map)
-    print("ONT5xx.get_set_tx_channel_mapping_size ONT1 result: [{}]".format(callResult))
-    if(callResult == False):
-        return(callResult)
-
-    callResult = ONT2.get_set_tx_channel_mapping_size(ONT2_P1, chan_map)
-    print("ONT5xx.get_set_tx_channel_mapping_size ONT2 result: [{}]".format(callResult))
-    if(callResult == False):
-        return(callResult)
-    
+        
     if((rate == "STM4") and (vc_type == "VC44C")):
         hostruct_s1 = "1xAU44C;"
         if(n_conn == 1):
@@ -747,7 +727,7 @@ def setup_vc_conc(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_
     elif((rate == "STM16") and (vc_type == "VC416C")):
         hostruct_s1 = "1xAU416C;"
         if(n_conn == 1):
-            hostruct_s2 = "1xAU44C-60xAU4;"
+            hostruct_s2 = "1xAU416C-48xAU4;"
         else:
             hostruct_s2 = "4xAU416C"
         conc_factor = 16
@@ -775,12 +755,28 @@ def setup_vc_conc(NE1, ONT1, ONT2, ONT1_P1, ONT2_P1, rate, vc_type, au_type, ne_
     if(callResult == True):
         tl1_string_out = NE1.tl1.get_last_outcome()
         print(tl1_string_out)
+    else:
+        print(tl1_command + "  ---FAILED---")
         
     tl1_command= "ED-STM64::STM64-" + ne_s2 + "::::" + "CMDMDE=FRCD,HOSTRUCT=" + hostruct_s2
     callResult = NE1.tl1.do(tl1_command)
     if(callResult == True):
         tl1_string_out = NE1.tl1.get_last_outcome()
-        print(tl1_string_out)        
+        print(tl1_string_out)
+    else:
+        print(tl1_command + "  ---FAILED---")     
+    
+    callResult = ONT1.get_set_rx_channel_mapping_size(ONT1_P1, chan_map)
+    print("ONT5xx.get_set_rx_channel_mapping_size ONT1 result: [{}]".format(callResult))
+
+    callResult = ONT2.get_set_rx_channel_mapping_size(ONT2_P1, chan_map)
+    print("ONT5xx.get_set_rx_channel_mapping_size ONT2 result: [{}]".format(callResult))
+
+    callResult = ONT1.get_set_tx_channel_mapping_size(ONT1_P1, chan_map)
+    print("ONT5xx.get_set_tx_channel_mapping_size ONT1 result: [{}]".format(callResult))
+
+    callResult = ONT2.get_set_tx_channel_mapping_size(ONT2_P1, chan_map)
+    print("ONT5xx.get_set_tx_channel_mapping_size ONT2 result: [{}]".format(callResult))
     
     return(conc_factor)
        
