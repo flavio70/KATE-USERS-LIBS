@@ -2159,3 +2159,52 @@ def QS_1300_Change_STMn_Structure(zq_run, NE1, zq_rate, zq_slot, zq_struct):
                          "{}-{} structure change to {} failed".format(zq_rate, zq_slot, zq_struct)+QS_000_Print_Line_Function())
     
     return
+
+def QS_1400_Change_STMn_PST(zq_run, NE1, zq_rate, zq_slot, zq_status):
+    
+    zq_tl1_res=NE1.tl1.do("ED-{}::{}-{}:::::{};".format(zq_rate, zq_rate, zq_slot, zq_status))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    if zq_cmd == (True,'COMPLD'):
+        dprint("OK\t {}-{} status changed to {} successful".format(zq_rate, zq_slot, zq_status),2)
+        zq_run.add_success(NE1, 
+                         "{} STATUS CHANGE".format(zq_rate),
+                         "0.0", 
+                         "{}-{} status changed to {}".format(zq_rate, zq_slot, zq_status))
+    else:
+        dprint("KO\t {}-{} status change to {} failed".format(zq_rate, zq_slot, zq_status),2)
+        zq_run.add_failure(NE1,
+                         "{} STATUS CHANGE".format(zq_rate),
+                         "0.0",
+                         "{} Status Change Error".format(zq_rate),
+                         "{}-{} status change to {} failed".format(zq_rate, zq_slot, zq_status)+QS_000_Print_Line_Function())
+    
+    return
+
+def QS_2000_ONT_Check_No_Alarm(zq_run, NE1, ONT1, ONT1_P1, zq_vc4_ch1):
+    
+    ONT1.get_set_rx_lo_measure_channel(ONT1_P1, zq_vc4_ch1)
+    ONT1.get_set_tx_lo_measure_channel(ONT1_P1, zq_vc4_ch1)
+
+    ONT1.start_measurement(ONT1_P1)
+    time.sleep(5)
+    ONT1.halt_measurement(ONT1_P1)
+
+    zq_res = False
+    zq_alm=ONT1.retrieve_ho_alarms(ONT1_P1)
+    if zq_alm[0]:
+        if  len(zq_alm[1]) == 0:
+            dprint("\nOK\tPath is alarm free.",2)
+            zq_run.add_success(NE1, "CHECK PATH ALARMS","0.0", "Path is alarm free")
+            zq_res = True
+        else:
+            dprint("\nKO\tAlarms found on path: {}".format(zq_alm[1]),2)
+            zq_run.add_failure(NE1, "CHECK PATH ALARMS","0.0", "PATH ALARMS FOUND"
+                                , "Path alarms found: {} {}".format(zq_alm[1],QS_000_Print_Line_Function()))
+    else:
+        dprint("\nKO\tONT command error: {}".format(zq_alm[1]),2)
+        zq_run.add_failure(NE1, "ONT COMMAND","0.0", "ONT RETRIEVE ALARM"
+                            , "ONT command error: {}".format(zq_alm[1],QS_000_Print_Line_Function()))
+        
+    return  zq_res
+
