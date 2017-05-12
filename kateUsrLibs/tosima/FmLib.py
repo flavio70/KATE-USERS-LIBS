@@ -16,6 +16,8 @@ from katelibs.facility_tl1      import *
 import time
 from inspect import currentframe
 
+global E_TTE_MSG     #TOTAL TEST TIME ELAPSED
+global E_PTE_MSG     #PARTIAL TEST TIME ELAPSED
 global E_LO_MTX 
 global E_MAX_MVC4 
 global E_TIMEOUT 
@@ -77,6 +79,9 @@ global E_AU44C_STM16_IDX
 global E_AU44C_STM64_IDX
 global E_AU416C_STM64_IDX
 
+
+E_TTE_MSG  = "TEST DURATION [TOTAL]"
+E_PTE_MSG  = "TEST DURATION [PARTIAL]"
 E_MAX_MVC4 = 384
 E_LO_MTX = "MXH60GLO"
 E_TIMEOUT = 20
@@ -86,6 +91,13 @@ E_RFI_NUM_TU3 = 2
 E_BLOCK_SIZE = 64        
 E_WAIT = 10
 
+#TO BE USED WITH ONT
+E_ASCII_HO_TI  = 'ONT HO-TRACE   '
+E_ASCII_LO_TI  = 'ONT LO-TRACE   '
+E_ASCII_BAD_TI = 'ABCDEFGHIJKL   '
+E_ASCII_DEF_TI = '' 
+
+#TO BE USED FOR AU4 
 E_HO_TI  = 'X4F4E5420484F2D5452414345202020' #'ONT HO-TRACE   '
 E_LO_TI  = 'X4F4E54204C4F2D5452414345202020' #'ONT LO-TRACE   '
 E_BAD_TI = 'X4142434445464748494A4B4C202020' #'ABCDEFGHIJKL   '
@@ -2082,20 +2094,26 @@ def QS_1050_Check_AU4_PST(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_status, 
                                  "Initial PST is wrong [{}AU4{}-{}-{}]: {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst)+QS_000_Print_Line_Function())
             
     else:
-        dprint("KO\t [RTRV-AU4::{}AU4{}-{}-1]".format(zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pst),2)
+        dprint("KO\t [RTRV-AU4::{}AU4{}-{}-{}]".format(zq_rate, zq_conc, zq_slot, zq_au4_num),2)
         zq_run.add_failure(NE1,
                          "EQUIPMENT RETRIEVAL",
                          "0.0",
                          "Equipment Retrieval Error",
-                         "[RTRV-AU4::{}AU4{}-{}-1]".format(zq_rate, zq_conc, zq_slot, zq_au4_num)+QS_000_Print_Line_Function())
+                         "[RTRV-AU4::{}AU4{}-{}-{}]".format(zq_rate, zq_conc, zq_slot, zq_au4_num)+QS_000_Print_Line_Function())
 
     return
     
         
-def QS_1100_Create_AU4_XC(zq_run, NE1, zq_rate, zq_slot, zq_au4_1, zq_au4_2, zq_cct="2WAY", zq_conc=""):
+def QS_1100_Create_AU4_XC(zq_run, NE1, zq_rate_from, zq_slot1, zq_au4_1, zq_au4_2, zq_cct="2WAY", zq_conc="", zq_slot2="", zq_rate_to=""):
 
-    zq_from = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_1)
-    zq_to = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_2)
+    zq_from = "{}AU4{}-{}-{}".format(zq_rate_from, zq_conc, zq_slot1, zq_au4_1)
+    zq_to = "{}AU4{}-{}-{}".format(zq_rate_to, zq_conc, zq_slot1, zq_au4_2)
+    if zq_slot2 != "":
+        if zq_rate_to != "":
+            zq_to = "{}AU4{}-{}-{}".format(zq_rate_to, zq_conc, zq_slot2, zq_au4_2)
+        else:
+            zq_to = "{}AU4{}-{}-{}".format(zq_rate_from, zq_conc, zq_slot2, zq_au4_2)
+        
     zq_tl1_res=NE1.tl1.do("ENT-CRS-VC4{}::{},{}:::{};".format(zq_conc, zq_from, zq_to, zq_cct))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
     zq_cmd=zq_msg.get_cmd_status()
@@ -2117,10 +2135,16 @@ def QS_1100_Create_AU4_XC(zq_run, NE1, zq_rate, zq_slot, zq_au4_1, zq_au4_2, zq_
     return
 
 
-def QS_1200_Delete_AU4_XC(zq_run, NE1, zq_rate, zq_slot, zq_au4_1, zq_au4_2, zq_cct="2WAY", zq_conc=""):
+def QS_1200_Delete_AU4_XC(zq_run, NE1, zq_rate_from, zq_slot1, zq_au4_1, zq_au4_2, zq_cct="2WAY", zq_conc="",zq_slot2="", zq_rate_to=""):
 
-    zq_from = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_1)
-    zq_to = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_2)
+    zq_from = "{}AU4{}-{}-{}".format(zq_rate_from, zq_conc, zq_slot1, zq_au4_1)
+    zq_to = "{}AU4{}-{}-{}".format(zq_rate_to, zq_conc, zq_slot1, zq_au4_2)
+    if zq_slot2 != "":
+        if zq_rate_to != "":
+            zq_to = "{}AU4{}-{}-{}".format(zq_rate_to, zq_conc, zq_slot2, zq_au4_2)
+        else:
+            zq_to = "{}AU4{}-{}-{}".format(zq_rate_from, zq_conc, zq_slot2, zq_au4_2)
+        
     zq_tl1_res=NE1.tl1.do("DLT-CRS-VC4{}::{},{}:::{};".format(zq_conc, zq_from, zq_to, zq_cct))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
     zq_cmd=zq_msg.get_cmd_status()
@@ -2181,6 +2205,130 @@ def QS_1400_Change_STMn_PST(zq_run, NE1, zq_rate, zq_slot, zq_status):
     
     return
 
+
+def QS_1500_Ena_Dis_AU4_POM(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_pom_enadis, zq_egpom_enadis, zq_conc = ""):
+
+    zq_tl1_res=NE1.tl1.do("ED-AU4{}::{}AU4{}-{}-{}::::POM={},EGPOM={};".format(zq_conc, zq_rate, zq_conc, zq_slot, zq_au4_num, zq_pom_enadis, zq_egpom_enadis))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    dprint(NE1.tl1.get_last_outcome(),2)
+    zq_cmd=zq_msg.get_cmd_status()
+
+    if zq_cmd == (True,'COMPLD'):
+        dprint("\nOK\tSetting POM to [{}] and EGPOM to [{}] for {}AU4{}-{}-{} successful"
+               .format(zq_pom_enadis, zq_egpom_enadis, zq_rate, zq_conc, zq_slot, zq_au4_num),2)
+        zq_run.add_success(NE1, "Setting POM to [{}] and EGPOM to [{}] for {}AU4{}-{}-{} successful".
+                           format(zq_pom_enadis,zq_egpom_enadis, zq_rate, zq_conc, zq_slot, zq_au4_num),"0.0", "POM and EGPOM setting")
+
+    else:
+        dprint("\nKO\tSetting POM to [{}] and EGPOM to [{}] for {}AU4{}-{}-{} failed"
+               .format(zq_pom_enadis, zq_egpom_enadis, zq_rate, zq_conc, zq_slot, zq_au4_num),2)
+        zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "Setting POM to [{}] and EGPOM to [{}] for {}AU4{}-{}-{} failed".
+                           format(zq_pom_enadis,zq_egpom_enadis, zq_rate, zq_conc, zq_slot, zq_au4_num),
+                           "Setting POM to [{}] and EGPOM to [{}] for {}AU4{}-{}-{} failed {}".format(zq_pom_enadis,zq_egpom_enadis, zq_rate, zq_conc, zq_slot, zq_au4_num,QS_000_Print_Line_Function()))
+        
+    return
+
+
+def QS_1550_Ena_Dis_AU4_TRCMON(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_trcmon_enadis, zq_egtrcmon_enadis, zq_conc = ""):
+
+    zq_tl1_res=NE1.tl1.do("ED-AU4{}::{}AU4{}-{}-{}::::TRCMON={},EGTRCMON={};".format(zq_conc, zq_rate, zq_conc, zq_slot, zq_au4_num, zq_trcmon_enadis, zq_egtrcmon_enadis))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    dprint(NE1.tl1.get_last_outcome(),2)
+    zq_cmd=zq_msg.get_cmd_status()
+
+    if zq_cmd == (True,'COMPLD'):
+        dprint("\nOK\tSetting TRCMON to [{}] and EGTRCMON to [{}] for {}AU4{}-{}-{} successful"
+               .format(zq_trcmon_enadis, zq_egtrcmon_enadis, zq_rate, zq_conc, zq_slot, zq_au4_num),2)
+        zq_run.add_success(NE1, "Setting TRCMON to [{}] and EGTRCMON to [{}] for {}AU4{}-{}-{} successful".
+                           format(zq_trcmon_enadis,zq_egtrcmon_enadis, zq_rate, zq_conc, zq_slot, zq_au4_num),"0.0", "POM and EGPOM setting")
+
+    else:
+        dprint("\nKO\tSetting TRCMON to [{}] and EGTRCMON to [{}] for {}AU4{}-{}-{} failed"
+               .format(zq_trcmon_enadis, zq_egtrcmon_enadis, zq_rate, zq_conc, zq_slot, zq_au4_num),2)
+        zq_run.add_failure(NE1,  "TL1 COMMAND","0.0", "Setting TRCMON to [{}] and EGTRCMON to [{}] for {}AU4{}-{}-{} failed".
+                           format(zq_trcmon_enadis,zq_egtrcmon_enadis, zq_rate, zq_conc, zq_slot, zq_au4_num),
+                           "Setting TRCMON to [{}] and EGTRCMON to [{}] for {}AU4{}-{}-{} failed {}".format(zq_trcmon_enadis,zq_egtrcmon_enadis, zq_rate, zq_conc, zq_slot, zq_au4_num,QS_000_Print_Line_Function()))
+        
+    return
+
+
+def QS_1600_Modify_AU_Trace(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_trc_exp, zq_egtrc_exp, zq_conc = ""):
+
+    zq_tl1_res=NE1.tl1.do("ED-AU4{}::{}AU4{}-{}-{}::::TRCEXPECTED={},EGTRCEXPECTED={};".format(zq_conc, zq_rate, zq_conc, zq_slot, zq_au4_num, zq_trc_exp, zq_egtrc_exp))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    if zq_cmd == (True,'COMPLD'):
+        dprint("\nOK\tHO Trace Identifier changed to [TRCEXPECTED={}] [EGTRCEXPECTED={}] for {}AU4{}-{}-{}".
+               format(zq_trc_exp, zq_egtrc_exp, zq_rate, zq_conc, zq_slot, zq_au4_num),2)
+        zq_run.add_success(NE1, "HOTrace Identifier changed to [TRCEXPECTED={}] [EGTRCEXPECTED={}] for {}AU4{}-{}-{}".
+               format(zq_trc_exp, zq_egtrc_exp, zq_rate, zq_conc, zq_slot, zq_au4_num),"0.0", "HO Trace Identifier changed")
+
+    else:
+        dprint("\nKO\tHO Trace Identifier change failure for {}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_num),2)
+        zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", 
+        "HO Trace Identifier change failure for {}AU4{}-{}-{} {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, QS_000_Print_Line_Function()))
+
+    return
+
+
+def QS_1650_Modify_AU_Param(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_param_value, zq_conc = ""):
+
+    zq_tl1_res=NE1.tl1.do("ED-AU4{}::{}AU4{}-{}-{}::::{};".
+                          format(zq_conc, zq_rate, zq_conc, zq_slot, zq_au4_num, zq_param_value))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    zq_cmd=zq_msg.get_cmd_status()
+    if zq_cmd == (True,'COMPLD'):
+        dprint("\nOK\tParameter [{}] changed for {}AU4{}-{}-{}".
+               format(zq_param_value, zq_rate, zq_conc, zq_slot, zq_au4_num),2)
+        zq_run.add_success(NE1, "Parameter [{}] changed for {}AU4{}-{}-{}".
+               format(zq_param_value, zq_rate, zq_conc, zq_slot, zq_au4_num),"0.0", "Parameter changed")
+
+    else:
+        dprint("\nKO\tParameter change failure for {}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_num),2)
+        zq_run.add_failure(NE1, "TL1 COMMAND","0.0", "TL1 COMMAND FAIL", 
+        "Parameter change failure for {}AU4{}-{}-{} {}".format(zq_rate, zq_conc, zq_slot, zq_au4_num, QS_000_Print_Line_Function()))
+
+    return
+
+
+
+def QS_1700_Check_VC4_Condition(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_cond_exp, zq_locn_exp , zq_dir_exp, zq_conc):
+
+    zq_facility = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_num)
+    zq_tl1_res=NE1.tl1.do("RTRV-COND-VC4{}::{}:::{},{},{};".format(zq_conc, zq_facility, zq_cond_exp, zq_locn_exp, zq_dir_exp))
+    zq_msg=TL1message(NE1.tl1.get_last_outcome())
+    dprint(NE1.tl1.get_last_outcome(),1)
+    if (zq_msg.get_cmd_response_size() == 0):
+        dprint("KO\tCondition verification [{}] for {} not found.".format(zq_cond_exp, zq_facility),2)
+        zq_run.add_failure(NE1,"CONDITION CHECK","0.0","Condition verification [{}] for  not found.".format(zq_cond_exp, zq_facility),
+                               "Condition verification [{}] for  not found. {}".format(zq_cond_exp, zq_facility, QS_000_Print_Line_Function()))
+    else:
+        zq_cmd=zq_msg.get_cmd_status()
+        if zq_cmd == (True,'COMPLD'):
+            zq_cond = zq_msg.get_cmd_attr_value("{},VC4".format(zq_facility), 2)
+            zq_locn = zq_msg.get_cmd_attr_value("{},VC4".format(zq_facility), 6)
+            zq_dir = zq_msg.get_cmd_attr_value("{},VC4".format(zq_facility), 7)
+
+            zq_cond = zq_cond[0]
+            zq_locn = zq_locn[0]
+            zq_dir = zq_dir[0]
+            
+            if (zq_cond == zq_cond_exp) and (zq_locn == zq_locn_exp) and (zq_dir == zq_dir_exp):
+                dprint("OK\tCondition verification successful for {} facility [{}][{}][{}].".format(zq_facility, zq_cond_exp, zq_locn, zq_dir),2)
+                zq_run.add_success(NE1, "Condition verification successful for {} facility [{}][{}][{}].".format(zq_facility, zq_cond_exp, zq_locn, zq_dir),"0.0", "{} CONDITION CHECK".format(zq_cond_exp))
+            else:
+                dprint("KO\tCondition verification failure for {} facility.".format(zq_facility),2)
+                dprint("\t\tCOND: Exp [{}]  - Rcv [{}]".format(zq_cond_exp,zq_cond),2)
+                dprint("\t\tLOCN: Exp [{}] - Rcv [{}]".format(zq_locn_exp,zq_locn),2)
+                dprint("\t\tDIR : Exp [{}]  - Rcv [{}]".format(zq_dir_exp,zq_dir),2)
+                zq_run.add_failure(NE1, "CONDITION CHECK","0.0","Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}]".
+                                   format(zq_facility, zq_cond_exp, zq_locn_exp, zq_dir_exp, zq_cond, zq_locn, zq_dir),
+                                   "Condition verification failure for {} facility : Exp: [{}-{}-{}] - Rcv [{}-{}-{}] {}".
+                                   format(zq_facility, zq_cond_exp, zq_locn_exp, zq_dir_exp, zq_cond, zq_locn, zq_dir,QS_000_Print_Line_Function()))
+
+    return
+
+
 def QS_2000_ONT_Check_No_Alarm(zq_run, NE1, ONT1, ONT1_P1, zq_vc4_ch1):
     
     ONT1.get_set_rx_lo_measure_channel(ONT1_P1, zq_vc4_ch1)
@@ -2207,4 +2355,36 @@ def QS_2000_ONT_Check_No_Alarm(zq_run, NE1, ONT1, ONT1_P1, zq_vc4_ch1):
                             , "ONT command error: {}".format(zq_alm[1],QS_000_Print_Line_Function()))
         
     return  zq_res
+
+def QS_2100_Set_BER_mode(zq_run, ONT1, ONT1_P1, zq_order, zq_mode, zq_rate, zq_error, zq_num_err, zq_num_noerr):
+
+    ONT1.get_set_error_insertion_mode(ONT1_P1, zq_order, zq_mode)
+    ONT1.get_set_error_rate(ONT1_P1, zq_order, zq_rate)
+    if zq_mode != 'RATE':
+        ONT1.get_set_num_errored_burst_frames(ONT1_P1, zq_order, str(zq_frame_err))
+        ONT1.get_set_num_not_errored_burst_frames(ONT1_P1, zq_order, str(zq_frame_noerr))
+    ONT1.get_set_error_insertion_type(ONT1_P1, zq_error)
+    print("***********************************************")
+    print("*\tBER / EBER parameters:")
+    print("*\t\tmode: {}".format(zq_mode))
+    print("*\t\trate: {}".format(zq_rate))
+    if zq_mode != 'RATE':
+        print("*\t\terror frames: {}".format(zq_frame_err))
+        print("*\t\tno error frames: {}".format(zq_frame_noerr))
+    print("***********************************************")
+
+    return
+
+def QS_9999_Time_Measure(zq_action, zq_msg=""):
+
+    global z_start_time
+    global z_stop_time
+
+    if zq_action == "START":    
+        z_start_time = time.time()
+    if zq_action == "STOP":
+        z_stop_time = time.time()
+        print("\n\t\t\t\t{}: {} [sec.]\n\n".format(zq_msg, str(z_stop_time-z_start_time)))
+    
+    return
 
