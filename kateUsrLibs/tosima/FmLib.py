@@ -2104,15 +2104,17 @@ def QS_1050_Check_AU4_PST(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_status, 
     return
     
         
-def QS_1100_Create_AU4_XC(zq_run, NE1, zq_rate_from, zq_slot1, zq_au4_1, zq_au4_2, zq_cct="2WAY", zq_conc="", zq_slot2="", zq_rate_to=""):
+def QS_1100_Create_AU4_XC(zq_run, NE1, zq_rate, zq_slot1, zq_au4_1, zq_au4_2, zq_cct="2WAY", zq_conc="", zq_slot2="", zq_rate_to=""):
 
-    zq_from = "{}AU4{}-{}-{}".format(zq_rate_from, zq_conc, zq_slot1, zq_au4_1)
+    zq_from = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot1, zq_au4_1)
     zq_to = "{}AU4{}-{}-{}".format(zq_rate_to, zq_conc, zq_slot1, zq_au4_2)
     if zq_slot2 != "":
         if zq_rate_to != "":
             zq_to = "{}AU4{}-{}-{}".format(zq_rate_to, zq_conc, zq_slot2, zq_au4_2)
         else:
-            zq_to = "{}AU4{}-{}-{}".format(zq_rate_from, zq_conc, zq_slot2, zq_au4_2)
+            zq_to = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot2, zq_au4_2)
+    else:
+        zq_to = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot1, zq_au4_2)
         
     zq_tl1_res=NE1.tl1.do("ENT-CRS-VC4{}::{},{}:::{};".format(zq_conc, zq_from, zq_to, zq_cct))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
@@ -2135,15 +2137,17 @@ def QS_1100_Create_AU4_XC(zq_run, NE1, zq_rate_from, zq_slot1, zq_au4_1, zq_au4_
     return
 
 
-def QS_1200_Delete_AU4_XC(zq_run, NE1, zq_rate_from, zq_slot1, zq_au4_1, zq_au4_2, zq_cct="2WAY", zq_conc="",zq_slot2="", zq_rate_to=""):
+def QS_1200_Delete_AU4_XC(zq_run, NE1, zq_rate, zq_slot1, zq_au4_1, zq_au4_2, zq_cct="2WAY", zq_conc="",zq_slot2="", zq_rate_to=""):
 
-    zq_from = "{}AU4{}-{}-{}".format(zq_rate_from, zq_conc, zq_slot1, zq_au4_1)
+    zq_from = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot1, zq_au4_1)
     zq_to = "{}AU4{}-{}-{}".format(zq_rate_to, zq_conc, zq_slot1, zq_au4_2)
     if zq_slot2 != "":
         if zq_rate_to != "":
             zq_to = "{}AU4{}-{}-{}".format(zq_rate_to, zq_conc, zq_slot2, zq_au4_2)
         else:
-            zq_to = "{}AU4{}-{}-{}".format(zq_rate_from, zq_conc, zq_slot2, zq_au4_2)
+            zq_to = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot2, zq_au4_2)
+    else:
+        zq_to = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot1, zq_au4_2)
         
     zq_tl1_res=NE1.tl1.do("DLT-CRS-VC4{}::{},{}:::{};".format(zq_conc, zq_from, zq_to, zq_cct))
     zq_msg=TL1message(NE1.tl1.get_last_outcome())
@@ -2292,7 +2296,7 @@ def QS_1650_Modify_AU_Param(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_param_
 
 
 
-def QS_1700_Check_VC4_Condition(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_cond_exp, zq_locn_exp , zq_dir_exp, zq_conc):
+def QS_1700_Check_VC4_Condition(zq_run, NE1, zq_rate, zq_slot, zq_au4_num, zq_cond_exp, zq_locn_exp , zq_dir_exp, zq_conc=""):
 
     zq_facility = "{}AU4{}-{}-{}".format(zq_rate, zq_conc, zq_slot, zq_au4_num)
     zq_tl1_res=NE1.tl1.do("RTRV-COND-VC4{}::{}:::{},{},{};".format(zq_conc, zq_facility, zq_cond_exp, zq_locn_exp, zq_dir_exp))
